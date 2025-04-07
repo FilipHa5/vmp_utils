@@ -1,0 +1,13 @@
+mv delivery_van/M221103_080721_013_K.mat car/
+mv delivery_van/M221119_074459_130_K.mat car/
+mv delivery_van/M221230_103804_728_K.mat car/
+mv bus/M240329_211158_801_K.mat delivery_van/
+mv bus/M240329_233812_111_K.mat truck/
+mv bus/M240402_010120_485_K.mat truck/
+mv bus/M240406_181221_932_K.mat truck/
+mv bus/M240411_025806_234_K.mat truck/
+mv bus/M240411_070544_272_K.mat delivery_van/
+mv bus/M240411_202710_183_K.mat delivery_van/
+mv bus/M240419_211514_951_K.mat delivery_van/
+mv bus/M240516_054654_553_K.mat truck/
+mv bus/M240516_095147_896_K.mat truck/

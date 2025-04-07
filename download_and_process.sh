@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mkdir extracted
-mkdir downloads
+mkdir downloads # @TODO: unused dir
 
 while read url
 do
@@ -24,3 +24,5 @@ do
     rm -rf "$filename_no_ext" "$filename_with_ext"
 
 done < $1
+
+mv extracted/tir/* extracted/truck/ && rm -rf extracted/tir/

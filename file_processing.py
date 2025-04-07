@@ -5,6 +5,7 @@ from glob import glob
 from scipy.io import loadmat
 
 from file_processing_utils import get_max_len, expand_element, category
+from mapping import save_class_to_filename_mapping
 
 if __name__ == "__main__":
 
@@ -15,7 +16,7 @@ if __name__ == "__main__":
 
     max_len = get_max_len(files_to_process)
     print(f"Processing {files_to_process} files")
-    print(f"Max length of sample = {max_len} samples")
+    print(f"Max length of sample: {max_len} samples")
 
     categories = set()
     for index, filepath in enumerate(files_to_process):
@@ -25,22 +26,23 @@ if __name__ == "__main__":
     categories = list(categories)
     print(f"Categories: {categories}")
 
+    # grouped_files_paths is a nested list, where sublists contain paths only to a single category files
     grouped_files_paths = []
     for cat in categories:
         one_cat_paths = [i for i in files_to_process if cat in i]
         grouped_files_paths.append(one_cat_paths)
 
-    for list_of_path_to_files_category in grouped_files_paths:
+    for _, list_of_path_to_files_category in grouped_files_paths:
         category_name = category(list_of_path_to_files_category[0])
         print(f"Processing {category_name}")
-        results = []
-        for index, filepath in enumerate(list_of_path_to_files_category):
+        signle_cat_npy = []
+        for _, filepath in enumerate(list_of_path_to_files_category):
             file = loadmat(filepath)
             expanded_reads_rcr = expand_element(file, "Rcr", max_len)
             expanded_reads_xcr = expand_element(file, "Xcr", max_len)
-            pair = [os.path.basename(filepath), expanded_reads_rcr, expanded_reads_xcr]
-            pair = np.asarray(pair, dtype=object)
-            results.append(pair)
+            name_r_x = [os.path.basename(filepath), expanded_reads_rcr, expanded_reads_xcr]
+            name_r_x = np.asarray(name_r_x, dtype=object)
+            signle_cat_npy.append(name_r_x)
 
         category_name = str(category_name)
 
@@ -51,6 +53,7 @@ if __name__ == "__main__":
             print("Destination path found", npy_dest_path)
 
         npy_file_name = os.path.join(npy_dest_path, category_name + ".npy")
-        np.save(npy_file_name, results)
+        np.save(npy_file_name, signle_cat_npy)
         print(f"Saved {category_name}.npy")
+    save_class_to_filename_mapping(npy_dest_path)
     print("Completed! Thanks for making this little script happy :)")

@@ -9,7 +9,7 @@ class VMPData(Dataset):
   def __init__(self, path, transform=None):
 
     self.fileslist = os.listdir(path)
-    self.files = [np.load(os.path.join(path, file), allow_pickle = True) for file in self.fileslist]
+    self.files = [np.load(os.path.join(path, file), allow_pickle = True) for file in self.fileslist if file.endswith('.npy')]
     self.data = []
     self.filenames = []
     self.labels = []
@@ -22,8 +22,8 @@ class VMPData(Dataset):
 
   def __getitem__(self, index):
     if self.transform:
-      return [self.transform(self.data[index]), self.labels[index]]
-    return [self.transform(self.data[index]), self.labels[index]]
+      return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
+    return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
 
   def __len__(self):
     return len(self.data)
@@ -32,9 +32,9 @@ class GetChannels(object):
   def __init__(self, channels):
     self.channels = channels
 
-  def __call__(self, r_x_data):
-    r_reads = r_x_data[0][self.channels]
-    x_reads = r_x_data[1][self.channels]
+  def __call__(self, data):
+    r_reads = data[0][self.channels]
+    x_reads = data[1][self.channels]
     return [r_reads, x_reads]
 
 class RollAllChannels(object):
@@ -74,10 +74,10 @@ class RollAllChannels(object):
 
 class StackSignals(object):
   def __call__(self, data):
-    r_reads = np.hstack(data[0])
-    x_reads = np.hstack(data[1])
-    joined_signals = [r_reads, x_reads]
-    return np.hstack(joined_signals)
+    r_stacked = np.hstack(data[0])
+    x_stacked = np.hstack(data[1])
+    joined_rx = [r_stacked, x_stacked]
+    return np.hstack(joined_rx)
 
 class ReduceSamplingRate():
   def __init__(self, reduce_factor):
