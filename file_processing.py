@@ -13,7 +13,7 @@ from file_processing_utils import (
 from mapping import save_class_to_filename_mapping
 
 MAT_SRC_PATH = "extracted"
-NPY_DEST_PATH = "npy_tmp"
+NPY_DEST_PATH = "npy"
 
 
 def process():

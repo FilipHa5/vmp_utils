@@ -22,8 +22,8 @@ class VMPData(Dataset):
 
   def __getitem__(self, index):
     if self.transform:
-      return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
-    return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
+        return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
+    return [self.data[index], self.labels[index], self.filenames[index]]
 
   def __len__(self):
     return len(self.data)
