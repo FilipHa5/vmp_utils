@@ -4,56 +4,50 @@ import numpy as np
 from glob import glob
 from scipy.io import loadmat
 
-from file_processing_utils import get_max_len, expand_element, category
+from file_processing_utils import (
+    get_max_len,
+    expand_element,
+    category,
+    prepare_expanded_file,
+)
 from mapping import save_class_to_filename_mapping
 
-if __name__ == "__main__":
+MAT_SRC_PATH = "extracted"
+NPY_DEST_PATH = "npy_tmp"
 
-    mat_src_path = sys.argv[1]
-    npy_dest_path = sys.argv[2]
 
-    files_to_process = [y for x in os.walk(mat_src_path) for y in glob(os.path.join(x[0], '*_K.mat'))]
-
-    max_len = get_max_len(files_to_process)
-    print(f"Processing {files_to_process} files")
-    print(f"Max length of sample: {max_len} samples")
-
-    categories = set()
-    for index, filepath in enumerate(files_to_process):
-        cat = category(filepath)
-        categories.add(cat)
+def process():
+    # TODO: check if extracted exists, otherwise break and notify
+    files_to_process = [
+        y for x in os.walk(MAT_SRC_PATH) for y in glob(os.path.join(x[0], "*_K.mat"))
+    ]
+    max_len, files, categories = get_max_len(files_to_process)
+    print(f"Max length of VMP signal: {max_len} samples")
 
     categories = list(categories)
-    print(f"Categories: {categories}")
+    categorized_files = [
+        list(filter(lambda x: x["vehicle_category"] == key, files))
+        for key in categories
+    ]
 
-    # grouped_files_paths is a nested list, where sublists contain paths only to a single category files
-    grouped_files_paths = []
-    for cat in categories:
-        one_cat_paths = [i for i in files_to_process if cat in i]
-        grouped_files_paths.append(one_cat_paths)
-
-    for _, list_of_path_to_files_category in grouped_files_paths:
-        category_name = category(list_of_path_to_files_category[0])
-        print(f"Processing {category_name}")
+    for sorted_files in categorized_files:
         signle_cat_npy = []
-        for _, filepath in enumerate(list_of_path_to_files_category):
-            file = loadmat(filepath)
-            expanded_reads_rcr = expand_element(file, "Rcr", max_len)
-            expanded_reads_xcr = expand_element(file, "Xcr", max_len)
-            name_r_x = [os.path.basename(filepath), expanded_reads_rcr, expanded_reads_xcr]
-            name_r_x = np.asarray(name_r_x, dtype=object)
+        for file in sorted_files:
+            name_r_x = np.asarray(prepare_expanded_file(file, max_len), dtype=object)
             signle_cat_npy.append(name_r_x)
+        if not os.path.exists(NPY_DEST_PATH):
+            os.mkdir(NPY_DEST_PATH)
+            print("Created destination path", NPY_DEST_PATH)
 
-        category_name = str(category_name)
-
-        if not os.path.exists(npy_dest_path):
-            os.mkdir(npy_dest_path)
-            print("Created destination path", npy_dest_path)
-        else:
-            print("Destination path found", npy_dest_path)
-
-        npy_file_name = os.path.join(npy_dest_path, category_name + ".npy")
+        npy_file_name = os.path.join(
+            NPY_DEST_PATH, sorted_files[0]["vehicle_category"] + ".npy"
+        )
         np.save(npy_file_name, signle_cat_npy)
-        print(f"Saved {category_name}.npy")
-    save_class_to_filename_mapping(npy_dest_path)
-    print("Completed! Thanks for making this little script happy :)")
+        print(f"Saved file: {npy_file_name}")
+
+    save_class_to_filename_mapping(NPY_DEST_PATH)
+
+
+if __name__ == "__main__":
+    process()
+    print(f"Completed! Files saved in {NPY_DEST_PATH}")
