@@ -1,13 +1,9 @@
 import os
-import sys
 import numpy as np
 from glob import glob
-from scipy.io import loadmat
 
 from file_processing_utils import (
     get_max_len,
-    expand_element,
-    category,
     prepare_expanded_file,
 )
 from mapping import save_class_to_filename_mapping

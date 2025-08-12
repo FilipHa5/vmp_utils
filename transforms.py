@@ -9,6 +9,7 @@ class VMPData(Dataset):
   def __init__(self, path, transform=None):
 
     self.fileslist = os.listdir(path)
+    # TODO: optimize this class to not read whole data at the same time
     self.files = [np.load(os.path.join(path, file), allow_pickle = True) for file in self.fileslist if file.endswith('.npy')]
     self.data = []
     self.filenames = []
@@ -22,11 +23,43 @@ class VMPData(Dataset):
 
   def __getitem__(self, index):
     if self.transform:
-        return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
+      return [self.transform(self.data[index]), self.labels[index], self.filenames[index]]
     return [self.data[index], self.labels[index], self.filenames[index]]
 
   def __len__(self):
     return len(self.data)
+
+class VMPDataWideSlim(VMPData):
+    def __getitem__(self, index):
+      if self.transform:
+        return [self.transform(self.data[index])[0], self.transform(self.data[index])[1], self.filenames[index]]
+      return [self.data[index], self.data[index], self.filenames[index]]
+
+class GetChannelsForWideSlimPred(object):
+  def __init__(self, channels_wide, channels_slim):
+    self.channels_wide = channels_wide
+    self.channels_slim = channels_slim
+
+  def __call__(self, data):
+    r_reads_wide = data[0][self.channels_wide]
+    x_reads_wide = data[1][self.channels_wide]
+    r_reads_slim = data[0][self.channels_slim]
+    x_reads_slim = data[1][self.channels_slim]
+    return [[r_reads_wide, x_reads_wide], [r_reads_slim, x_reads_slim]]
+
+class StackSignalsForWideSlimPred(object):
+  def __call__(self, data):
+    r_stacked_wide = np.hstack(data[0][0])
+    x_stacked_wide = np.hstack(data[0][1])
+    r_stacked_slim = np.hstack(data[1][0])
+    x_stacked_slim = np.hstack(data[1][1])
+    joined_rx_wide = [r_stacked_wide, x_stacked_wide]
+    joined_rx_slim = [r_stacked_slim, x_stacked_slim]
+    return np.hstack(joined_rx_wide), np.hstack(joined_rx_slim)
+
+class ToTensorWideSlim(object):
+  def __call__(self, signal):
+    return torch.tensor(signal[0], dtype = torch.float32), torch.tensor(signal[1], dtype = torch.float32)
 
 class GetChannels(object):
   def __init__(self, channels):
