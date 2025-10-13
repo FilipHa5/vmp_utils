@@ -36,7 +36,7 @@ class VMPDataWideSlim(VMPData):
       return [self.data[index], self.data[index], self.filenames[index]]
 
 class GetChannelsForWideSlimPred(object):
-  def __init__(self, channels_wide, channels_slim):
+  def __init__(self, channels_wide, channels_slim, modality):
     self.channels_wide = channels_wide
     self.channels_slim = channels_slim
 
