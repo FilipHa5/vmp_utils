@@ -10,7 +10,7 @@ class VMPData(Dataset):
 
     self.fileslist = os.listdir(path)
     # TODO: optimize this class to not read whole data at the same time
-    self.files = [np.load(os.path.join(path, file), allow_pickle = True) for file in self.fileslist if file.endswith('.npy')]
+    self.files = [np.load(os.path.join(path, file), allow_pickle = True) for file in self.fileslist if file.endswith('.npy') and not file.startswith("mapping")]
     self.data = []
     self.filenames = []
     self.labels = []
@@ -34,6 +34,24 @@ class VMPDataWideSlim(VMPData):
       if self.transform:
         return [self.transform(self.data[index])[0], self.transform(self.data[index])[1], self.filenames[index]]
       return [self.data[index], self.data[index], self.filenames[index]]
+
+class VMPDataWideSlimCNN(VMPData):
+    def __init__(self, path, transform=None):
+        super().__init__(path, transform)
+
+    def __getitem__(self, index):
+        A, B = self.data[index]
+        if self.transform:
+            A, B = self.transform([A, B])
+        return A, B, self.filenames[index]
+
+class ToTensorCNN:
+    def __call__(self, data):
+        A, B = data  # list of signals
+        # np. A = [array(seq_len), array(seq_len), ...] for channels
+        A = torch.tensor(np.stack(A), dtype=torch.float32)  # (channels_in, seq_len)
+        B = torch.tensor(np.stack(B), dtype=torch.float32)  # (channels_out, seq_len)
+        return A, B
 
 class GetChannelsForWideSlimPred(object):
   def __init__(self, channels_wide, channels_slim, modality):
